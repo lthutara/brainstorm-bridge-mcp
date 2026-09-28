@@ -1,0 +1,5 @@
+mcp>=2.1.0
+python-docx>=1.2.0
+pypdf>=6.19.0
+fonttools>=4.66.0
+pydantic>=2.12.0
