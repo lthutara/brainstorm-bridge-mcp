@@ -1,6 +1,6 @@
-# Downloads MCP Server for AI Chatbot Ideas & Discussions
+# Downloads Ingest MCP Server (`downloads-ingest-mcp`)
 
-A Model Context Protocol (MCP) server that monitors the Downloads folder, parses web AI chatbot brainstorming exports (`.docx`, `.md`, `.txt`, `.pdf`, `.json`), and exposes tools for search, extraction, and direct MyPlanner task creation.
+A Model Context Protocol (MCP) server that monitors the Windows Downloads folder, parses AI chatbot brainstorming exports (`.docx`, `.md`, `.txt`, `.pdf`, `.json`), and exposes tools for search, extraction, and direct MyPlanner task creation for the AI harness.
 
 ## Key Capabilities & Tools
 
@@ -28,9 +28,9 @@ Registered in `~/.gemini/config/mcp_config.json`:
 {
   "mcpServers": {
     "downloads": {
-      "command": "/home/lthutara/ai-projects/chat-ideas-mcp/venv/bin/python3",
+      "command": "/home/lthutara/ai-projects/downloads-ingest-mcp/venv/bin/python3",
       "args": [
-        "/home/lthutara/ai-projects/chat-ideas-mcp/mcp_server.py"
+        "/home/lthutara/ai-projects/downloads-ingest-mcp/mcp_server.py"
       ]
     }
   }
