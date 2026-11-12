@@ -51,39 +51,62 @@ def extract_discussion_structure(raw_text: str, file_name: str) -> Dict[str, Any
 
     # 4. Extract Actionable Items / Roadmap Tasks
     action_items = []
-    action_patterns = [
-        r"^(?:[-*•]|\d+\.)\s*(?:\[[ x]\]\s*)?(?:TODO|Task|Action|Step|Phase)?:?\s*(.+)$",
-        r"^(?:Phase|Step|Sprint|Milestone)\s*\d+[:\-]\s*(.+)$",
-        r"^\s*-\s*\[ \]\s*(.+)$"
+    
+    # Priority action patterns (checkboxes, explicit action keywords)
+    explicit_task_patterns = [
+        r"^(?:[-*•]|\d+\.)?\s*\[[ x]\]\s*(.+)$",
+        r"^(?:[-*•]|\d+\.)\s*(?:TODO|Task|Action|Step|Phase|Milestone)\s*\d*[:\-]\s*(.+)$",
+        r"^(?:Phase|Step|Sprint|Milestone)\s*\d+[:\-]\s*(.+)$"
     ]
+    
+    in_action_section = False
+    action_section_triggers = ["action item", "roadmap", "todo", "tasks", "next step", "implementation plan", "milestone"]
 
     for line in lines:
         line_strip = line.strip()
-        if not line_strip or line_strip.startswith(("#", "|", "---")):
+        if not line_strip or line_strip.startswith(("|", "---")):
+            continue
+
+        # Check if heading denotes an Action section
+        if line_strip.startswith("#"):
+            h_lower = line_strip.lower()
+            in_action_section = any(t in h_lower for t in action_section_triggers)
             continue
 
         matched = False
-        for pat in action_patterns:
+        task_text = ""
+
+        # Check explicit patterns first
+        for pat in explicit_task_patterns:
             m = re.match(pat, line_strip, re.IGNORECASE)
             if m:
                 task_text = m.group(1).strip()
-                if 8 < len(task_text) < 180 and not task_text.lower().startswith(("http", "note:", "tip:")):
-                    # Determine priority
-                    priority = "P2 - Medium"
-                    lower = task_text.lower()
-                    if any(w in lower for w in ["critical", "urgent", "core", "p0", "p1", "first", "must", "immediate"]):
-                        priority = "P1 - High"
-                    elif any(w in lower for w in ["optional", "later", "nice to have", "p3", "future", "backlog"]):
-                        priority = "P3 - Low"
+                matched = True
+                break
 
-                    action_items.append({
-                        "title": task_text,
-                        "description": f"Extracted from discussion: {file_name}",
-                        "priority": priority
-                    })
-                    matched = True
-                    break
-        if matched and len(action_items) >= 20:
+        # If inside an Action/Roadmap section, standard bullets are also tasks
+        if not matched and in_action_section:
+            bullet_m = re.match(r"^(?:[-*•]|\d+\.)\s*(.+)$", line_strip)
+            if bullet_m:
+                task_text = bullet_m.group(1).strip()
+                matched = True
+
+        if matched and task_text:
+            if 8 < len(task_text) < 180 and not task_text.lower().startswith(("http", "note:", "tip:")):
+                # Determine priority
+                priority = "P2 - Medium"
+                lower = task_text.lower()
+                if any(w in lower for w in ["critical", "urgent", "core", "p0", "p1", "first", "must", "immediate"]):
+                    priority = "P1 - High"
+                elif any(w in lower for w in ["optional", "later", "nice to have", "p3", "future", "backlog"]):
+                    priority = "P3 - Low"
+
+                action_items.append({
+                    "title": task_text,
+                    "description": f"Extracted from discussion: {file_name}",
+                    "priority": priority
+                })
+        if len(action_items) >= 30:
             break
 
     return {

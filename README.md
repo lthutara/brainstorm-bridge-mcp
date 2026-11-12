@@ -1,38 +1,160 @@
-# Downloads Ingest MCP Server (`downloads-ingest-mcp`)
+# 🌉 BrainstormBridge (`brainstorm-bridge`)
 
-A Model Context Protocol (MCP) server that monitors the Windows Downloads folder, parses AI chatbot brainstorming exports (`.docx`, `.md`, `.txt`, `.pdf`, `.json`), and exposes tools for search, extraction, and direct MyPlanner task creation for the AI harness.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![MCP Compatible](https://img.shields.io/badge/MCP-2.1.0-emerald.svg)](https://modelcontextprotocol.io/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Security: Prompt Injection Protected](https://img.shields.io/badge/Security-Prompt_Injection_Hardened-green.svg)](#-threat-model--prompt-injection-defense)
 
-## Key Capabilities & Tools
+**The Secure, Prompt-Injection-Hardened Context Bridge from Chatbot Brainstorms to Coding Agents.**
 
-1. **`list_recent_discussions(limit=15, days=14, file_type="")`**
-   - Scans the Windows Downloads folder (`/mnt/c/Users/lokes/Downloads`) for recent discussion exports and documents.
-   - Returns file sizes, modified timestamps, format extensions, and text preview snippets.
+Bring architecture notes, data schemas, and brainstorming exports from ChatGPT, Claude, DeepSeek, and Gemini directly into **Claude Code, Cursor, Antigravity CLI, and Copilot Workspace**—without the risk of Indirect Prompt Injection (IPI).
 
-2. **`read_chat_discussion(file_name, extract_structure=True)`**
-   - Parses DOCX, PDF, Markdown, Text, and JSON chat exports into clean, formatted Markdown.
-   - Automatically extracts inferred title, executive summary, key architectural decisions, and actionable roadmap items.
+---
 
-3. **`search_chat_discussions(query, limit=10, max_files=40)`**
-   - Fast full-text search across downloaded AI brainstorming sessions and documents.
-   - Returns matching files, matched lines/snippets with context, and occurrence counts.
+## 💡 The Problem
 
-4. **`import_discussion_to_myplanner(file_name, category="Ideation", sprint="active")`**
-   - Automatically parses actionable roadmap tasks from any discussion export.
-   - Creates the tasks directly in MyPlanner (`planner.db`), complete with back-links to the source file.
+Developers love brainstorming architectures in web and mobile chat interfaces (ChatGPT, Claude, DeepSeek) because of their canvas, speed, voice mode, and conversational depth. 
 
-## Configuration in Antigravity
+However, transferring that context into terminal coding harnesses is painful and dangerous:
+1. **Manual Copy-Paste Fatigue**: Splitting 50-turn chat transcripts into architecture docs and actionable tasks takes hours.
+2. **The Prompt Injection Vulnerability**: Ingesting unvetted external downloads or chat exports into autonomous coding agents creates a severe **Indirect Prompt Injection (IPI)** vector. Malicious text, hidden zero-width steganography, or HTML comments can hijack the agent into reading `.env` keys or executing unwanted shell commands.
 
-Registered in `~/.gemini/config/mcp_config.json`:
+**BrainstormBridge** solves both problems: it ingests and parses multi-turn chat exports, strips malicious injection vectors, wraps content in an immutable XML sandbox, and automatically synthesizes architecture decisions and a checklisted `ROADMAP.md`.
 
+---
+
+## 📐 Architecture & Security Pipeline
+
+```
+┌────────────────────────────────────────┐
+│  Web Chat Export (ChatGPT/Claude/etc)  │
+│      (.md, .json, .docx, .pdf, .txt)   │
+└───────────────────┬────────────────────┘
+                    │  (Explicit User Drop)
+                    ▼
+┌────────────────────────────────────────┐
+│   Safe Inbox: ~/.brainstorm-inbox/     │
+└───────────────────┬────────────────────┘
+                    │
+                    ▼
+┌────────────────────────────────────────────────────────┐
+│            Prompt Injection Sanitizer Layer            │
+│  • Strip invisible Unicode zero-width steganography    │
+│  • Strip hidden HTML comments (<!-- System: ... -->)   │
+│  • Neutralize active instruction-hijacking patterns    │
+│  • Enclose in <untrusted_brainstorm_document> sandbox  │
+└───────────────────┬────────────────────────────────────┘
+                    │
+                    ▼
+┌────────────────────────────────────────────────────────┐
+│           Semantic Synthesizer & Task Engine           │
+│  • Inferred Title & Executive Summary                  │
+│  • Architectural Decisions & Stack Trade-offs          │
+│  • P1 / P2 / P3 Action Items & Roadmaps                │
+└───────────────────┬────────────────────────────────────┘
+                    │
+       ┌────────────┴────────────┐
+       ▼                         ▼
+┌──────────────┐          ┌──────────────┐
+│  ROADMAP.md  │          │ Coding Agent │
+│  tasks.json  │          │ (Claude/Agy) │
+└──────────────┘          └──────────────┘
+```
+
+---
+
+## 🛡️ Threat Model & Prompt Injection Defense
+
+BrainstormBridge enforces **Data-Instruction Separation**:
+* **Air-Gapped Inbox (`~/.brainstorm-inbox/`)**: The tool never scans the raw system `Downloads/` directory by default, preventing drive-by downloads or phishing attachments from being processed.
+* **Unicode Steganography Stripping**: Strips zero-width non-joiners, word joiners, and hidden BOM marks (`\u200B`, `\u200C`, `\uFEFF`) used to hide instructions from human eyes.
+* **Hidden Comment Neutralization**: Strips HTML comment blocks and deceptive invisible CSS tags (`display:none`, `font-size:0px`).
+* **XML Sandboxing**: Wraps all ingested context in immutable `<untrusted_brainstorm_document>` tags with explicit boundaries instructing the host model to treat all enclosed text strictly as passive data.
+
+---
+
+## 🚀 Key MCP Tools
+
+| Tool | Description |
+| :--- | :--- |
+| **`list_inbox_brainstorms`** | Lists recent discussion exports waiting in the safe quarantined inbox. |
+| **`ingest_brainstorm`** | Reads, sanitizes, and extracts structured architectural decisions and tasks from `.md`, `.json`, `.docx`, `.pdf`, or `.txt`. |
+| **`export_brainstorm_to_roadmap`** | Automatically generates a checklisted **`ROADMAP.md`** or **`tasks.json`** directly in your active project. |
+| **`search_inbox`** | Performs fast full-text search across all saved brainstorm sessions. |
+| **`export_brainstorm_to_myplanner`** | (Optional) Directly syncs action items into a local MyPlanner database. |
+
+---
+
+## 📦 Installation & Setup
+
+### 1. Clone & Setup Virtual Environment
+```bash
+git clone https://github.com/lthutara/download-ingest-mcp.git brainstorm-bridge
+cd brainstorm-bridge
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+### 2. Configure in your AI Agent Harness
+
+#### For Claude Desktop & Claude Code
+Add to your `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "downloads": {
-      "command": "/home/lthutara/ai-projects/downloads-ingest-mcp/venv/bin/python3",
-      "args": [
-        "/home/lthutara/ai-projects/downloads-ingest-mcp/mcp_server.py"
-      ]
+    "brainstorm-bridge": {
+      "command": "/path/to/brainstorm-bridge/venv/bin/python3",
+      "args": ["/path/to/brainstorm-bridge/mcp_server.py"],
+      "env": {
+        "BRAINSTORM_INBOX_DIR": "~/.brainstorm-inbox"
+      }
     }
   }
 }
 ```
+
+#### For Antigravity CLI / Gemini Config (`~/.gemini/config/mcp_config.json`)
+```json
+{
+  "mcpServers": {
+    "brainstorm-bridge": {
+      "command": "/path/to/brainstorm-bridge/venv/bin/python3",
+      "args": ["/path/to/brainstorm-bridge/mcp_server.py"]
+    }
+  }
+}
+```
+
+#### For Cursor
+Add an MCP server in Cursor Settings $\rightarrow$ Features $\rightarrow$ MCP:
+* **Name**: `brainstorm-bridge`
+* **Type**: `command`
+* **Command**: `/path/to/brainstorm-bridge/venv/bin/python3 /path/to/brainstorm-bridge/mcp_server.py`
+
+---
+
+## 💬 Example Workflow
+
+1. You brainstorm a new feature in ChatGPT or Claude on your phone or web browser and export the chat as `auth-architecture.md`.
+2. Move it to your inbox:
+   ```bash
+   mv ~/Downloads/auth-architecture.md ~/.brainstorm-inbox/
+   ```
+3. In your coding agent (Claude Code, Cursor, Antigravity):
+   > *"I have a brainstorm export named auth-architecture.md in the inbox. Ingest it and generate our roadmap."*
+4. BrainstormBridge sanitizes the file, confirms no prompt injection triggers exist, extracts your architectural choices, and writes a pristine `ROADMAP.md` ready for coding!
+
+---
+
+## 🧪 Testing
+
+Run the automated security and unit test suite:
+```bash
+./venv/bin/python3 -m unittest discover tests
+```
+
+---
+
+## 📄 License
+MIT License. Free for personal and commercial use. Contributions are welcome!

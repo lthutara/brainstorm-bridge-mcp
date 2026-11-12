@@ -3,7 +3,11 @@ import os
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 
-DEFAULT_PLANNER_DB = "/home/lthutara/ai-projects/myplanner/instance/planner.db"
+DEFAULT_PLANNER_DB = os.getenv("PLANNER_DB", os.path.expanduser("~/ai-projects/myplanner/instance/planner.db"))
+
+def is_myplanner_available(db_path: str = DEFAULT_PLANNER_DB) -> bool:
+    """Check if a MyPlanner SQLite database exists at the target path."""
+    return bool(db_path and os.path.exists(db_path))
 
 def get_db_connection(db_path: str = DEFAULT_PLANNER_DB) -> sqlite3.Connection:
     if not os.path.exists(db_path):
