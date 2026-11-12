@@ -89,8 +89,8 @@ BrainstormBridge enforces **Data-Instruction Separation**:
 
 ### 1. Clone & Setup Virtual Environment
 ```bash
-git clone https://github.com/lthutara/download-ingest-mcp.git brainstorm-bridge
-cd brainstorm-bridge
+git clone https://github.com/lthutara/brainstorm-bridge-mcp.git
+cd brainstorm-bridge-mcp
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
