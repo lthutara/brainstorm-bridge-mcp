@@ -38,16 +38,39 @@ def extract_discussion_structure(raw_text: str, file_name: str) -> Dict[str, Any
     decisions = []
     decision_triggers = [
         "architecture", "decision", "approach", "chosen", "pattern", "strategy",
-        "trade-off", "tradeoff", "standard", "protocol", "framework", "database", "stack"
+        "trade-off", "tradeoff", "standard", "protocol", "framework", "database", "stack", "schema"
     ]
-    for p in raw_text.split("\n\n"):
-        p_lower = p.lower()
-        if any(trig in p_lower for trig in decision_triggers) and len(p.strip()) > 30:
-            first_line = p.strip().split("\n")[0]
-            if len(first_line) < 200:
-                decisions.append(first_line)
-        if len(decisions) >= 8:
-            break
+    
+    in_decision_section = False
+    decision_section_triggers = ["architecture", "decision", "technical design", "stack", "data model"]
+
+    for line in lines:
+        l_strip = line.strip()
+        if not l_strip or l_strip.startswith(("|", "---")):
+            continue
+
+        if l_strip.startswith("#"):
+            h_lower = l_strip.lower()
+            in_decision_section = any(t in h_lower for t in decision_section_triggers) and "action" not in h_lower
+            continue
+
+        # If inside an architecture/decisions section and line is a bullet or definition
+        if in_decision_section and (l_strip.startswith(("-", "*", "•")) or ":" in l_strip):
+            clean_item = l_strip.lstrip("-*• \t").strip()
+            if 15 < len(clean_item) < 220 and not clean_item.startswith("["):
+                decisions.append(clean_item)
+                if len(decisions) >= 10:
+                    break
+            continue
+
+        # General trigger match outside dedicated section
+        l_lower = l_strip.lower()
+        if any(trig in l_lower for trig in decision_triggers) and l_strip.startswith(("-", "*", "•")):
+            clean_item = l_strip.lstrip("-*• \t").strip()
+            if 15 < len(clean_item) < 220 and not clean_item.startswith("[") and clean_item not in decisions:
+                decisions.append(clean_item)
+                if len(decisions) >= 10:
+                    break
 
     # 4. Extract Actionable Items / Roadmap Tasks
     action_items = []
